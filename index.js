@@ -1,81 +1,110 @@
-import express from "express";
-import axios from "axios";
-
+const express = require("express");
 const app = express();
+
 app.use(express.json());
+app.get("/webhook", (req, res) => {
+  const message = (req.query.message || "").toLowerCase();
+  let response = "Não entendi sua mensagem 😕";
 
-// ⚠️ TROQUE PELOS DADOS DA SUA Z-API
-const INSTANCE_ID = "3ECEE11AD5BFC2CA35EAC6C617EB3F06";
-const TOKEN = "D68AF2CC460343506A5CFA77";
+  if (
+    message.includes("oi") ||
+    message.includes("olá") ||
+    message.includes("ola") ||
+    message.includes("bom dia") ||
+    message.includes("boa tarde")
+  ) {
+    response = `👣 *Clínica de Podologia*
 
-// ROTA QUE A Z-API VAI CHAMAR
-app.post("/webhook", async (req, res) => {
-  try {
-    const msg = req.body.message?.text?.toLowerCase();
-    const phone = req.body.message?.phone;
+Olá! Seja muito bem-vindo(a) 😊  
+Como posso te ajudar hoje?
 
-    // Se não vier mensagem válida, não faz nada
-    if (!msg || !phone) {
-      return res.sendStatus(200);
-    }
-
-    let resposta = "";
-
-    if (msg === "1") {
-      resposta = `📅 *Agendamento de consulta*
-
-Por favor, envie:
-• Nome completo
-• Tipo de atendimento
-• Dia e horário preferido`;
-    } 
-    else if (msg === "2") {
-      resposta = `💰 *Valores dos atendimentos*
-
-• Avaliação: R$ XX
-• Podologia preventiva: R$ XX
-• Unha encravada: R$ XX`;
-    } 
-    else if (msg === "3") {
-      resposta = `🦶 *Tratamentos*
-
-✔️ Unha encravada
-✔️ Calos e calosidades
-✔️ Rachaduras
-✔️ Pé diabético`;
-    } 
-    else if (msg === "4") {
-      resposta = `👩‍⚕️ Um atendente falará com você em breve.`;
-    } 
-    else {
-      resposta = `Olá! 👋  
-Você está falando com a *Clínica de Podologia* 🦶
-
-Digite uma opção:
-1️⃣ Agendar consulta
-2️⃣ Valores
-3️⃣ Tratamentos
-4️⃣ Falar com atendente`;
-    }
-
-    // ENVIA A RESPOSTA PELO Z-API
-    await axios.post(
-      `https://api.z-api.io/instances/${INSTANCE_ID}/token/${TOKEN}/send-text`,
-      {
-        phone: phone,
-        message: resposta
-      }
-    );
-
-    res.sendStatus(200);
-  } catch (error) {
-    console.error("Erro no webhook:", error.message);
-    res.sendStatus(200);
+1️⃣ Serviços  
+2️⃣ Horário de atendimento  
+3️⃣ Endereço  
+4️⃣ Valores  
+5️⃣ Agendar atendimento`;
   }
+
+  res.send(response);
 });
 
-// PORTA (Railway usa automaticamente)
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🤖 Bot rodando na porta ${PORT}`);
+app.post("/webhook", (req, res) => {
+  const message = (req.body.message || "").toLowerCase();
+  let response = "";
+
+  if (
+    message.includes("oi") ||
+    message.includes("ola") ||
+    message.includes("olá") ||
+    message.includes("bom dia") ||
+    message.includes("boa tarde") ||
+    message.includes("boa noite")
+  ) {
+    response =
+      "Ola! Seja bem-vindo(a) a Clinica de Podologia S.O.S do Pé.\n\n" +
+      "Como posso ajudar?\n" +
+      "Digite:\n" +
+      "1 - Servicos\n" +
+      "2 - Precos\n" +
+      "3 - Horario\n" +
+      "4 - Endereco\n" +
+      "5 - Agendar";
+  }
+
+  else if (message.includes("servico") || message.includes("servicos")) {
+    response =
+      "Nossos servicos:\n" +
+      "- Avaliacao podologica\n" +
+      "- Corte tecnico de unhas\n" +
+      "- Tratamento de calos\n" +
+      "- Unha encravada\n" +
+      "- Podologia preventiva";
+  }
+
+  else if (message.includes("preco") || message.includes("preços")) {
+    response =
+      "💰 *Valores*
+
+Os valores variam conforme o procedimento.
+
+📲 Para orçamento, fale com nosso atendimento.
+
+Digite *menu* para voltar ao início.";
+  }
+
+  else if (message.includes("horario") || message.includes("horário")) {
+    response =
+      "Horario de atendimento:\n" +
+      "Segunda a sexta: 9h as 15h\n" +
+      "Sabado: 9h as 13h";
+  }
+
+  else if (message.includes("endereco") || message.includes("endereço")) {
+    response =
+      "Endereco:\n" +
+      "Rua Arabaiana, 557 - Brasilia teimosa\n" +
+      "Recife - PE";
+  }
+
+ else if (message.includes("agendar")) {
+  response =
+    "Perfeito 😊\n" +
+    "Vou chamar um atendente para te ajudar com o agendamento.\n" +
+    "Aguarde um instante, por favor.";
+}
+
+
+  else {
+    response =
+      "Nao entendi sua mensagem.\n" +
+      "Digite: Servicos, Precos, Horario, Endereco ou Agendar.";
+  }
+
+  return res.json({
+    replyMessage: response
+  });
+});
+
+app.listen(3000, () => {
+  console.log("Bot rodando na porta 3000");
 });
