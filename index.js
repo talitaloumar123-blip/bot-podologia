@@ -3,7 +3,16 @@ const app = express();
 
 app.use(express.json());
 app.get("/webhook", (req, res) => {
-  const message = (req.query.message || "").toLowerCase();
+  const message =
+  (
+    req.body?.message ||
+    req.body?.text?.message ||
+    req.body?.message?.text ||
+    ""
+  ).toLowerCase();
+console.log("Webhook recebido:", JSON.stringify(req.body, null, 2));
+
+
   let response = "Não entendi sua mensagem 😕";
 
   if (
