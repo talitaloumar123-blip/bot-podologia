@@ -62,15 +62,15 @@ app.post("/webhook", (req, res) => {
   }
 
   else if (message.includes("preco") || message.includes("preços")) {
-    response =
-      ´💰 *Valores*
+  response = `💰 *Valores*
 
 Os valores variam conforme o procedimento.
 
 📲 Para orçamento, fale com nosso atendimento.
 
-Digite *menu* para voltar ao início.´;
-  }
+Digite *menu* para voltar ao início.`;
+}
+
 
   else if (message.includes("horario") || message.includes("horário")) {
     response =
