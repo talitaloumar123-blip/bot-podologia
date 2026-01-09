@@ -1,5 +1,4 @@
-const express = require("express");
-const app = express();
+
 // no início do index.js
 import express from "express";
 const app = express();
