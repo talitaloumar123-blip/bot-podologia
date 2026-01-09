@@ -1,11 +1,10 @@
 import express from "express";
 const app = express();
 
-// Aceitar JSON e form-data
+// Aceitar JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Função para processar mensagem
 function processMessage(rawMessage) {
   const message = (rawMessage || "").toLowerCase();
   let response = "Não entendi sua mensagem 😕";
@@ -35,26 +34,15 @@ function processMessage(rawMessage) {
   return response;
 }
 
-// Webhook principal (WhatsApp/Z-API)
+// POST principal (WhatsApp/Z-API)
 app.post("/webhook", (req, res) => {
-  // Pega mensagem de qualquer formato que o Z-API envia
-  const rawMessage =
-    req.body?.text?.message ||   // Z-API formato text.message
-    req.body?.message?.text ||   // Z-API outro formato
-    req.body?.body ||            // fallback
-    req.body?.message ||         // fallback adicional
-    req.query?.message ||        // navegador
-    "";
-
+  const rawMessage = req.body?.text?.message || req.query?.message || "";
   console.log("Z-API POST recebido:", JSON.stringify(req.body, null, 2));
-
   const reply = processMessage(rawMessage);
-
-  // Retorno compatível com Z-API
   res.json({ replyMessage: reply });
 });
 
-// GET opcional para teste no navegador
+// GET opcional para navegador
 app.get("/webhook", (req, res) => {
   const rawMessage = req.query?.message || "";
   const reply = processMessage(rawMessage);
