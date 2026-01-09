@@ -1,13 +1,14 @@
 import express from "express";
 const app = express();
 
-// Aceitar JSON
+// Aceitar JSON e form-data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Função que processa a mensagem e retorna a resposta
 function processMessage(rawMessage) {
-  const message = (rawMessage || "").toLowerCase();
-  let response = "Não entendi sua mensagem 😕";
+  const message = (rawMessage || "").toLowerCase().trim();
+  let response = "Não entendi sua mensagem 😕\nDigite: Oi, Serviços, Preços, Horário, Endereço ou Agendar.";
 
   if (
     message.includes("oi") ||
@@ -36,18 +37,25 @@ function processMessage(rawMessage) {
 
 // POST principal (WhatsApp/Z-API)
 app.post("/webhook", (req, res) => {
-  const rawMessage = req.body?.text?.message || req.query?.message || "";
+  // Captura qualquer tipo de mensagem do Z-API ou query do navegador
+  const rawMessage =
+    req.body?.text?.message || // mensagem de texto
+    req.body?.body ||          // fallback para outros tipos de mensagem
+    req.query?.message || "";  // teste via navegador
+
   console.log("Z-API POST recebido:", JSON.stringify(req.body, null, 2));
+
   const reply = processMessage(rawMessage);
   res.json({ replyMessage: reply });
 });
 
-// GET opcional para navegador
+// GET opcional para teste no navegador
 app.get("/webhook", (req, res) => {
   const rawMessage = req.query?.message || "";
   const reply = processMessage(rawMessage);
   res.send(reply);
 });
 
+// Porta do servidor
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log("Bot rodando na porta " + PORT));
