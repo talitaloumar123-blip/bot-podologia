@@ -1,11 +1,15 @@
 import express from "express";
+import fetch from "node-fetch"; // npm install node-fetch
 const app = express();
 
-// Aceitar JSON e form-data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Função que processa a mensagem e retorna a resposta
+// CONFIGURAÇÃO Z-API
+const INSTANCE_ID = "3ECEE11AD5BFC2CA35EAC6C617EB3F06";
+const TOKEN = "D68AF2CC460343506A5CFA77";
+
+// Função que processa a mensagem e retorna resposta
 function processMessage(rawMessage) {
   const message = (rawMessage || "").toLowerCase().trim();
   let response = "Não entendi sua mensagem 😕\nDigite: Oi, Serviços, Preços, Horário, Endereço ou Agendar.";
@@ -28,34 +32,3 @@ function processMessage(rawMessage) {
     response = "Horário de atendimento:\nSegunda a sexta: 9h às 15h\nSábado: 9h às 13h";
   } else if (message.includes("endereco") || message.includes("endereço")) {
     response = "Endereço:\nRua Arabaiana, 557 - Brasilia Teimosa\nRecife - PE";
-  } else if (message.includes("agendar")) {
-    response = "Perfeito 😊\nVou chamar um atendente para te ajudar com o agendamento.\nAguarde um instante, por favor.";
-  }
-
-  return response;
-}
-
-// POST principal (WhatsApp/Z-API)
-app.post("/webhook", (req, res) => {
-  // Captura qualquer tipo de mensagem do Z-API ou query do navegador
-  const rawMessage =
-    req.body?.text?.message || // mensagem de texto
-    req.body?.body ||          // fallback para outros tipos de mensagem
-    req.query?.message || "";  // teste via navegador
-
-  console.log("Z-API POST recebido:", JSON.stringify(req.body, null, 2));
-
-  const reply = processMessage(rawMessage);
-  res.json({ replyMessage: reply });
-});
-
-// GET opcional para teste no navegador
-app.get("/webhook", (req, res) => {
-  const rawMessage = req.query?.message || "";
-  const reply = processMessage(rawMessage);
-  res.send(reply);
-});
-
-// Porta do servidor
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log("Bot rodando na porta " + PORT));
