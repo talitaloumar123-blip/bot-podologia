@@ -5,12 +5,16 @@ app.use(express.json());
 app.get("/webhook", (req, res) => {
  const message =
   (
-    req.body?.text?.message ||   // Z-API envia aqui
-    req.body?.message ||         // fallback
-    req.body?.body ||            // outro fallback
+    req.body?.text?.message ||   // formato Z-API
+    req.body?.message?.text ||   // outro formato possível Z-API
+    req.body?.body ||            // fallback
+    req.body?.message ||         // fallback adicional
     req.query?.message ||        // captura ?message=oi do navegador
     ""
   ).toLowerCase();
+
+let response = "Não entendi sua mensagem 😕";
+
 
 console.log("Webhook recebido:", JSON.stringify(req.body, null, 2));
 
