@@ -1,29 +1,13 @@
-
-// no início do index.js
 import express from "express";
 const app = express();
 
-// Adicione estas linhas para aceitar qualquer tipo de body
-app.use(express.json()); // JSON
-app.use(express.urlencoded({ extended: true })); // form-data ou x-www-form-urlencoded
-
-
+// Aceitar JSON e form-data
 app.use(express.json());
-app.get("/webhook", (req, res) => {
- const message =
-  (
-    req.body?.text?.message ||   // formato Z-API
-    req.body?.message?.text ||   // outro formato possível Z-API
-    req.body?.body ||            // fallback
-    req.body?.message ||         // fallback adicional
-    req.query?.message ||        // captura ?message=oi do navegador
-    ""
-  ).toLowerCase();
+app.use(express.urlencoded({ extended: true }));
 
-
-console.log("Webhook recebido:", JSON.stringify(req.body, null, 2));
-
-
+// Função para processar mensagem
+function processMessage(rawMessage) {
+  const message = (rawMessage || "").toLowerCase();
   let response = "Não entendi sua mensagem 😕";
 
   if (
@@ -31,103 +15,51 @@ console.log("Webhook recebido:", JSON.stringify(req.body, null, 2));
     message.includes("olá") ||
     message.includes("ola") ||
     message.includes("bom dia") ||
-    message.includes("boa tarde")
-  ) {
-    response = `👣 *Clínica de Podologia*
-
-Olá! Seja muito bem-vindo(a) 😊  
-Como posso te ajudar hoje?
-
-1️⃣ Serviços  
-2️⃣ Horário de atendimento  
-3️⃣ Endereço  
-4️⃣ Valores  
-5️⃣ Agendar atendimento`;
-  }
-
-  res.send(response);
-});
-
-app.post("/webhook", (req, res) => {
-  const message = (req.body.message || "").toLowerCase();
-  let response = "";
-
-  if (
-    message.includes("oi") ||
-    message.includes("ola") ||
-    message.includes("olá") ||
-    message.includes("bom dia") ||
     message.includes("boa tarde") ||
     message.includes("boa noite")
   ) {
+    response = `👣 *Clínica de Podologia*\n\nOlá! Seja muito bem-vindo(a) 😊\nComo posso te ajudar hoje?\n\n1️⃣ Serviços\n2️⃣ Horário de atendimento\n3️⃣ Endereço\n4️⃣ Valores\n5️⃣ Agendar atendimento`;
+  } else if (message.includes("servico") || message.includes("servicos")) {
     response =
-      "Ola! Seja bem-vindo(a) a Clinica de Podologia S.O.S do Pé.\n\n" +
-      "Como posso ajudar?\n" +
-      "Digite:\n" +
-      "1 - Servicos\n" +
-      "2 - Precos\n" +
-      "3 - Horario\n" +
-      "4 - Endereco\n" +
-      "5 - Agendar";
+      "Nossos serviços:\n- Avaliação podológica\n- Corte técnico de unhas\n- Tratamento de calos\n- Unha encravada\n- Podologia preventiva";
+  } else if (message.includes("preco") || message.includes("preços")) {
+    response = `💰 *Valores*\n\nOs valores variam conforme o procedimento.\n📲 Para orçamento, fale com nosso atendimento.\n\nDigite *menu* para voltar ao início.`;
+  } else if (message.includes("horario") || message.includes("horário")) {
+    response = "Horário de atendimento:\nSegunda a sexta: 9h às 15h\nSábado: 9h às 13h";
+  } else if (message.includes("endereco") || message.includes("endereço")) {
+    response = "Endereço:\nRua Arabaiana, 557 - Brasilia Teimosa\nRecife - PE";
+  } else if (message.includes("agendar")) {
+    response = "Perfeito 😊\nVou chamar um atendente para te ajudar com o agendamento.\nAguarde um instante, por favor.";
   }
 
-  else if (message.includes("servico") || message.includes("servicos")) {
-    response =
-      "Nossos servicos:\n" +
-      "- Avaliacao podologica\n" +
-      "- Corte tecnico de unhas\n" +
-      "- Tratamento de calos\n" +
-      "- Unha encravada\n" +
-      "- Podologia preventiva";
-  }
-
-  else if (message.includes("preco") || message.includes("preços")) {
-  response = `💰 *Valores*
-
-Os valores variam conforme o procedimento.
-
-📲 Para orçamento, fale com nosso atendimento.
-
-Digite *menu* para voltar ao início.`;
+  return response;
 }
 
+// Webhook principal (WhatsApp/Z-API)
+app.post("/webhook", (req, res) => {
+  // Pega mensagem de qualquer formato que o Z-API envia
+  const rawMessage =
+    req.body?.text?.message ||   // Z-API formato text.message
+    req.body?.message?.text ||   // Z-API outro formato
+    req.body?.body ||            // fallback
+    req.body?.message ||         // fallback adicional
+    req.query?.message ||        // navegador
+    "";
 
-  else if (message.includes("horario") || message.includes("horário")) {
-    response =
-      "Horario de atendimento:\n" +
-      "Segunda a sexta: 9h as 15h\n" +
-      "Sabado: 9h as 13h";
-  }
+  console.log("Z-API POST recebido:", JSON.stringify(req.body, null, 2));
 
-  else if (message.includes("endereco") || message.includes("endereço")) {
-    response =
-      "Endereco:\n" +
-      "Rua Arabaiana, 557 - Brasilia teimosa\n" +
-      "Recife - PE";
-  }
+  const reply = processMessage(rawMessage);
 
- else if (message.includes("agendar")) {
-  response =
-    "Perfeito 😊\n" +
-    "Vou chamar um atendente para te ajudar com o agendamento.\n" +
-    "Aguarde um instante, por favor.";
-}
-
-
-  else {
-    response =
-      "Nao entendi sua mensagem.\n" +
-      "Digite: Servicos, Precos, Horario, Endereco ou Agendar.";
-  }
-
-  return res.json({
-    replyMessage: response
-  });
+  // Retorno compatível com Z-API
+  res.json({ replyMessage: reply });
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("Bot rodando na porta " + PORT);
+// GET opcional para teste no navegador
+app.get("/webhook", (req, res) => {
+  const rawMessage = req.query?.message || "";
+  const reply = processMessage(rawMessage);
+  res.send(reply);
 });
 
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log("Bot rodando na porta " + PORT));
