@@ -1,5 +1,13 @@
 const express = require("express");
 const app = express();
+// no início do index.js
+import express from "express";
+const app = express();
+
+// Adicione estas linhas para aceitar qualquer tipo de body
+app.use(express.json()); // JSON
+app.use(express.urlencoded({ extended: true })); // form-data ou x-www-form-urlencoded
+
 
 app.use(express.json());
 app.get("/webhook", (req, res) => {
