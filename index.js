@@ -13,8 +13,6 @@ app.get("/webhook", (req, res) => {
     ""
   ).toLowerCase();
 
-let response = "Não entendi sua mensagem 😕";
-
 
 console.log("Webhook recebido:", JSON.stringify(req.body, null, 2));
 
