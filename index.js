@@ -3,13 +3,15 @@ const app = express();
 
 app.use(express.json());
 app.get("/webhook", (req, res) => {
-  const message =
+ const message =
   (
-    req.body?.message ||
-    req.body?.text?.message ||
-    req.body?.message?.text ||
+    req.body?.text?.message ||   // Z-API envia aqui
+    req.body?.message ||         // fallback
+    req.body?.body ||            // outro fallback
+    req.query?.message ||        // captura ?message=oi do navegador
     ""
   ).toLowerCase();
+
 console.log("Webhook recebido:", JSON.stringify(req.body, null, 2));
 
 
