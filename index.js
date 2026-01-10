@@ -26,7 +26,8 @@ app.post("/webhook", async (req, res) => {
   const phone = req.body?.phone;
 
   let response =
-    "Não entendi sua mensagem 😕\nDigite: Oi, Serviços, Preços, Horário, Endereço ou Agendar.";
+    "Não entendi sua mensagem 😕\n" +
+    "Digite: Oi, Serviços, Preços, Horário, Endereço ou Agendar.";
 
   if (
     message.includes("oi") ||
@@ -36,41 +37,51 @@ app.post("/webhook", async (req, res) => {
     message.includes("boa tarde") ||
     message.includes("boa noite")
   ) {
-    response = `👣 *Clínica de Podologia*
-
-Olá! Seja bem-vindo(a) 😊
-
-1️⃣ Serviços  
-2️⃣ Preços  
-3️⃣ Horário  
-4️⃣ Endereço  
-5️⃣ Agendar`;
+    response =
+      "👣 Clínica de Podologia\n\n" +
+      "Olá! Seja bem-vindo(a) 😊\n\n" +
+      "1️⃣ Serviços\n" +
+      "2️⃣ Preços\n" +
+      "3️⃣ Horário\n" +
+      "4️⃣ Endereço\n" +
+      "5️⃣ Agendar";
   } else if (message.includes("serviço") || message.includes("servicos")) {
-    response = `🦶 Serviços:
-- Avaliação podológica
-- Corte técnico de unhas
-- Tratamento de calos
-- Unha encravada
-- Podologia preventiva`;
+    response =
+      "🦶 Serviços:\n" +
+      "- Avaliação podológica\n" +
+      "- Corte técnico de unhas\n" +
+      "- Tratamento de calos\n" +
+      "- Unha encravada\n" +
+      "- Podologia preventiva";
   } else if (message.includes("preço") || message.includes("precos")) {
-    response = `💰 Valores:
-Os valores variam conforme o procedimento.
-Fale conosco para orçamento.`;
+    response =
+      "💰 Valores:\n" +
+      "Os valores variam conforme o procedimento.\n" +
+      "Fale conosco para orçamento.";
   } else if (message.includes("horário") || message.includes("horario")) {
-    response = `⏰ Horário:
-Segunda a sexta: 9h às 15h
-Sábado: 9h às 13h`;
+    response =
+      "⏰ Horário:\n" +
+      "Segunda a sexta: 9h às 15h\n" +
+      "Sábado: 9h às 13h";
   } else if (message.includes("endereço") || message.includes("endereco")) {
-    response = `📍 Endereço:
-Rua Arabaiana, 557
-Brasília Teimosa – Recife/PE`;
+    response =
+      "📍 Endereço:\n" +
+      "Rua Arabaiana, 557\n" +
+      "Brasília Teimosa – Recife/PE";
   } else if (message.includes("agendar")) {
-    response = `📅 Perfeito!
-Um atendente irá falar com você para agendar 😊`;
+    response =
+      "📅 Perfeito!\n" +
+      "Um atendente irá falar com você para agendar 😊";
   }
 
   try {
-    const url = `${ZAPI_BASE_URL}/instances/${INSTANCE_ID}/token/${TOKEN}/send-text`;
+    const url =
+      ZAPI_BASE_URL +
+      "/instances/" +
+      INSTANCE_ID +
+      "/token/" +
+      TOKEN +
+      "/send-text";
 
     const zapiResponse = await fetch(url, {
       method: "POST",
@@ -79,7 +90,7 @@ Um atendente irá falar com você para agendar 😊`;
         "client-token": CLIENT_TOKEN
       },
       body: JSON.stringify({
-        phone,
+        phone: phone,
         message: response
       })
     });
@@ -96,5 +107,5 @@ Um atendente irá falar com você para agendar 😊`;
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, () => {
-  console.log("Bot rodando na porta", PORT);
+  console.log("Bot rodando na porta " + PORT);
 });
