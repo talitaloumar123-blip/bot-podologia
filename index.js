@@ -11,15 +11,10 @@ const TOKEN = process.env.ZAPI_TOKEN;
 
 const ZAPI_BASE_URL = "https://api.z-api.io";
 
-console.log("Z-API CONFIG OK?", {
-  instance: INSTANCE_ID,
-  tokenConfigured: !!TOKEN,
-});
-
 app.post("/webhook", async (req, res) => {
   console.log("Z-API POST recebido:", JSON.stringify(req.body, null, 2));
 
-  if (req.body.fromMe) {
+  if (req.body?.fromMe) {
     return res.sendStatus(200);
   }
 
@@ -27,7 +22,7 @@ app.post("/webhook", async (req, res) => {
     ? req.body.text.message.toLowerCase()
     : "";
 
-  const phone = req.body.phone;
+  const phone = req.body?.phone;
 
   let response =
     "Não entendi sua mensagem 😕\nDigite: Oi, Serviços, Preços, Horário, Endereço ou Agendar.";
@@ -37,3 +32,56 @@ app.post("/webhook", async (req, res) => {
     message.includes("olá") ||
     message.includes("ola") ||
     message.includes("bom dia") ||
+    message.includes("boa tarde") ||
+    message.includes("boa noite")
+  ) {
+    response = `👣 *Clínica de Podologia*
+
+Olá! Seja bem-vindo(a) 😊
+
+1️⃣ Serviços  
+2️⃣ Preços  
+3️⃣ Horário  
+4️⃣ Endereço  
+5️⃣ Agendar`;
+  } else if (message.includes("serviço") || message.includes("servicos")) {
+    response = `🦶 Serviços:
+- Avaliação podológica
+- Corte técnico de unhas
+- Tratamento de calos
+- Unha encravada
+- Podologia preventiva`;
+  } else if (message.includes("preço") || message.includes("precos")) {
+    response = `💰 Valores:
+Os valores variam conforme o procedimento.
+Fale conosco para orçamento.`;
+  } else if (message.includes("horário") || message.includes("horario")) {
+    response = `⏰ Horário:
+Segunda a sexta: 9h às 15h
+Sábado: 9h às 13h`;
+  } else if (message.includes("endereço") || message.includes("endereco")) {
+    response = `📍 Endereço:
+Rua Arabaiana, 557
+Brasília Teimosa – Recife/PE`;
+  } else if (message.includes("agendar")) {
+    response = `📅 Perfeito!
+Um atendente irá falar com você para agendar 😊`;
+  }
+
+  try {
+    const url = `${ZAPI_BASE_URL}/instances/${INSTANCE_ID}/token/${TOKEN}/send-text`;
+
+    const zapiResponse = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "client-token": TOKEN
+      },
+      body: JSON.stringify({
+        phone,
+        message: response
+      })
+    });
+
+    const data = await zapiResponse.json();
+    co
