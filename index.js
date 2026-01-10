@@ -1,122 +1,126 @@
 import express from "express";
+import axios from "axios";
 
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-const INSTANCE_ID = "SUA_INSTANCE_ID";
-const TOKEN = "SEU_TOKEN";
+// ===============================
+// CONFIGURAÇÃO Z-API (ENV)
+// ===============================
+const INSTANCE_ID = process.env.ZAPI_INSTANCE_ID;
+const TOKEN = process.env.ZAPI_TOKEN;
 
-// ================== FUNÇÃO ÚNICA DE RESPOSTA ==================
-function gerarResposta(texto) {
-  const msg = (texto || "").toLowerCase().trim();
-
-  if (
-    msg.includes("oi") ||
-    msg.includes("olá") ||
-    msg.includes("ola") ||
-    msg.includes("menu") ||
-    msg.includes("bom dia") ||
-    msg.includes("boa tarde") ||
-    msg.includes("boa noite")
-  ) {
-    return `👣 *Clínica de Podologia*
-
-Olá! Seja bem-vindo(a) 😊  
-Como posso te ajudar?
-
-1️⃣ Serviços  
-2️⃣ Horário  
-3️⃣ Endereço  
-4️⃣ Valores  
-5️⃣ Agendar`;
-  }
-
-  if (msg === "1" || msg.includes("serviço")) {
-    return `🦶 *Serviços*
-- Avaliação podológica
-- Corte técnico de unhas
-- Tratamento de calos
-- Unha encravada`;
-  }
-
-  if (msg === "2" || msg.includes("horário")) {
-    return `🕘 *Horário de atendimento*
-Seg–Sex: 9h às 15h  
-Sáb: 9h às 13h`;
-  }
-
-  if (msg === "3" || msg.includes("endereço")) {
-    return `📍 *Endereço*
-Rua Arabaiana, 557  
-Brasília Teimosa – Recife`;
-  }
-
-  if (msg === "4" || msg.includes("valor") || msg.includes("preço")) {
-    return `💰 *Valores*
-Os valores variam conforme o procedimento.
-Digite *menu* para voltar.`;
-  }
-
-  if (msg === "5" || msg.includes("agendar")) {
-    return `Perfeito 😊  
-Um atendente humano irá falar com você.`;
-  }
-
-  return `Não entendi sua mensagem 😕  
-Digite: *Oi*, *Serviços*, *Horário*, *Endereço*, *Valores* ou *Agendar*.`;
+if (!INSTANCE_ID || !TOKEN) {
+  console.error("❌ INSTANCE_ID ou TOKEN não definidos nas variáveis de ambiente");
 }
 
-// ================== ENVIO REAL PELO WHATSAPP ==================
-async function enviarMensagemWhats(phone, message) {
+// ===============================
+// FUNÇÃO PARA ENVIAR MENSAGEM
+// ===============================
+async function enviarMensagem(phone, message) {
   const url = `https://api.z-api.io/instances/${INSTANCE_ID}/token/${TOKEN}/send-text`;
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Client-Token": TOKEN
-    },
-    body: JSON.stringify({
+  try {
+    const response = await axios.post(url, {
       phone,
       message
-    })
-  });
+    });
 
-  const data = await response.text();
-  console.log("Resposta Z-API send-text:", data);
+    console.log("Resposta Z-API send-text:", response.data);
+  } catch (error) {
+    console.error(
+      "Erro ao enviar mensagem:",
+      error.response?.data || error.message
+    );
+  }
 }
 
-
-// ================== WEBHOOK Z-API ==================
+// ===============================
+// WEBHOOK Z-API
+// ===============================
 app.post("/webhook", async (req, res) => {
   console.log("Z-API POST recebido:", JSON.stringify(req.body, null, 2));
 
-  // ignora mensagens do próprio bot
-  if (req.body.fromMe) {
+  const data = req.body;
+
+  // Ignorar mensagens enviadas pelo próprio bot
+  if (data.fromMe) {
     return res.sendStatus(200);
   }
 
-  const phone = req.body.phone;
-  const text = req.body?.text?.message;
-
-  if (!phone || !text) {
+  // Ignorar grupos
+  if (data.isGroup) {
     return res.sendStatus(200);
   }
 
-  const resposta = gerarResposta(text);
-  await enviarMensagemWhats(phone, resposta);
+  // Garantir que é texto
+  if (!data.text || !data.text.message) {
+    return res.sendStatus(200);
+  }
+
+  const phone = data.phone;
+  const mensagem = data.text.message.trim().toLowerCase();
+
+  let resposta = "";
+
+  if (mensagem === "oi" || mensagem === "olá" || mensagem === "ola") {
+    resposta =
+      "Olá! 👋\n\n" +
+      "Digite uma opção:\n" +
+      "• Serviços\n" +
+      "• Preços\n" +
+      "• Horário\n" +
+      "• Endereço\n" +
+      "• Agendar";
+  } 
+  else if (mensagem === "serviços") {
+    resposta =
+      "🦶 *Serviços de Podologia*\n\n" +
+      "• Corte técnico de unhas\n" +
+      "• Tratamento de calos e calosidades\n" +
+      "• Unha encravada\n" +
+      "• Avaliação podológica";
+  } 
+  else if (mensagem === "preços" || mensagem === "precos") {
+    resposta =
+      "💰 *Preços*\n\n" +
+      "Os valores variam conforme o serviço.\n" +
+      "Digite *Agendar* para falar conosco.";
+  } 
+  else if (mensagem === "horário" || mensagem === "horario") {
+    resposta =
+      "⏰ *Horário de Atendimento*\n\n" +
+      "Segunda a Sexta: 08h às 18h\n" +
+      "Sábado: 08h às 12h";
+  } 
+  else if (mensagem === "endereço" || mensagem === "endereco") {
+    resposta =
+      "📍 *Endereço*\n\n" +
+      "Rua Exemplo, 123\n" +
+      "Centro – Sua Cidade";
+  } 
+  else if (mensagem === "agendar") {
+    resposta =
+      "📅 Para agendar, por favor informe:\n\n" +
+      "• Nome completo\n" +
+      "• Melhor dia e horário";
+  } 
+  else {
+    resposta =
+      "Não entendi sua mensagem 😕\n\n" +
+      "Digite:\n" +
+      "Oi, Serviços, Preços, Horário, Endereço ou Agendar.";
+  }
+
+  await enviarMensagem(phone, resposta);
 
   res.sendStatus(200);
 });
 
-// ================== TESTE PELO NAVEGADOR ==================
-app.get("/webhook", (req, res) => {
-  const resposta = gerarResposta(req.query.message);
-  res.send(resposta);
-});
-
+// ===============================
+// SERVIDOR
+// ===============================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log("🤖 Bot rodando na porta " + PORT);
+  console.log(`✅ Bot rodando na porta ${PORT}`);
 });
