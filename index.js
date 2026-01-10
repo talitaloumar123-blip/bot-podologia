@@ -71,12 +71,22 @@ Digite: *Oi*, *Serviços*, *Horário*, *Endereço*, *Valores* ou *Agendar*.`;
 async function enviarMensagemWhats(phone, message) {
   const url = `https://api.z-api.io/instances/${INSTANCE_ID}/token/${TOKEN}/send-text`;
 
-  await fetch(url, {
+  const response = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ phone, message }),
+    headers: {
+      "Content-Type": "application/json",
+      "Client-Token": TOKEN
+    },
+    body: JSON.stringify({
+      phone,
+      message
+    })
   });
+
+  const data = await response.text();
+  console.log("Resposta Z-API send-text:", data);
 }
+
 
 // ================== WEBHOOK Z-API ==================
 app.post("/webhook", async (req, res) => {
