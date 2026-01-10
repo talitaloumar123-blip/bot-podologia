@@ -8,7 +8,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const INSTANCE_ID = process.env.ZAPI_INSTANCE_ID;
 const TOKEN = process.env.ZAPI_TOKEN;
-const CLIENT_TOKEN = process.env.ZAPI_CLIENT_TOKEN;
+
 
 const ZAPI_BASE_URL = "https://api.z-api.io";
 
