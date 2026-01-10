@@ -8,6 +8,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const INSTANCE_ID = process.env.ZAPI_INSTANCE_ID;
 const TOKEN = process.env.ZAPI_TOKEN;
+const CLIENT_TOKEN = process.env.ZAPI_CLIENT_TOKEN;
 
 const ZAPI_BASE_URL = "https://api.z-api.io";
 
@@ -75,7 +76,7 @@ Um atendente irá falar com você para agendar 😊`;
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "client-token": TOKEN
+        "client-token": CLIENT_TOKEN
       },
       body: JSON.stringify({
         phone,
@@ -84,4 +85,16 @@ Um atendente irá falar com você para agendar 😊`;
     });
 
     const data = await zapiResponse.json();
-    co
+    console.log("Resposta Z-API:", data);
+  } catch (err) {
+    console.error("Erro ao enviar mensagem:", err);
+  }
+
+  res.sendStatus(200);
+});
+
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, () => {
+  console.log("Bot rodando na porta", PORT);
+});
